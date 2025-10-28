@@ -7,6 +7,7 @@
 #include <windows.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 // Define macros マクロの定義
 
 #define V_MAX			(25)
@@ -19,7 +20,12 @@ const int CONSOLE_HEIGHT = 26;
 
 const int direction_x[8] = { -1,-1,-1,0,0,1,1,1 };
 const int direction_y[8] = { -1,0,1,-1,1,-1,0,1 };
-void drawUi();
+void enterMoveOn();                     // Enterキーで先に進む関数
+void drawTitle();					 // タイトルを描画する関数
+void drawUi();						 // UIを描画する関数
+void saveUiToTemp();                  // UIを一時バッファに保存する関数
+void resetUiFromTemp();              // 一時バッファからUIを復元する関数
+void writeIntro();                            // 白文字でイントロ表示
 void SetCursorVisibility(BOOL visible);		// カーソルの表示/非表示を設定する関数
 void MoveCursorToTop();		                // カーソルを画面の左上に移動する関数
 void clearInputBuffer();                    // キーボード入力バッファのクリア関数
@@ -35,37 +41,38 @@ void SetTextColorRGB(int r, int g, int b);	//コンソールウィンドウの�
 void SetBackgroundColorRGB(int r, int g, int b);	//コンソールウィンドウの背景色をRGB形式で変更
 bool isValidPosition(int x, int y);
 
-char ui[V_MAX + 1][H_MAX + 1] =
-//  0         1         2         3
+char temp[V_MAX][H_MAX + 1]; // UI描画用の一時バッファ
+char ui[V_MAX][H_MAX + 1] =
+//   0         1         2         3         4         5         6         7         8
 {//  01234567890123456789012345678901234567890123456789012345678901234567890123456789
-	"[                                                                              ]",//0
-	"                                                                                ",//1
-	"                                                                                ",//2
-	"                                                                                ",//3
-	"                                                                                ",//4
-	"                                                                                ",//5
-	"                                                                                ",//6
-	"                                                                                ",//7
-	"                                                                                ",//8
-	"                                                                                ",//9
-	"                                                                                ",//0
-	"                                                                                ",//1
-	"                                                                                ",//2
-	"                                                                                ",//3
-	"                                                                                ",//4
-	"                                                                                ",//5
-	"                                                                                ",//6
-	"                                                                                ",//7
-	"                                                                                ",//8
-	 "                                                                               ",//9
-	"                                                                                ",//0
-	"                                                                                ",//1
-	"                                                                                ",//2
-	"                                                                                ",//3
-	"[                                                                              ]",//4
+	"********************************************************************************",//0
+	"*                                                                              *",//1
+	"*                                                                              *",//2
+	"*                                                                              *",//3
+	"*                                                                              *",//4
+	"*                                                                              *",//5
+	"*                                                                              *",//6
+	"*                                                                              *",//7
+	"*                                                                              *",//8
+	"*                                                                              *",//9
+	"*                                                                              *",//0
+	"*                                                                              *",//1
+	"*                                                                              *",//2
+	"*                                                                              *",//3
+	"*                                                                              *",//4
+	"*                                                                              *",//5
+	"*                                                                              *",//6
+	"*                                                                              *",//7
+	"********************************************************************************",//8
+	"*                                                                              *",//9
+	"*                                                                              *",//0
+	"*                                                                              *",//1
+	"*                                                                              *",//2
+	"*                                                                              *",//3
+	"********************************************************************************",//4
 };
 
-char title[19][80] = {
+char title[20][80] = {
 	"==============================================================================\0",
 	" _______  ___   ___      _______  _______  __   __  _______  _______  __   __ \0",
 	"|       ||   | |   |    |       ||   _   ||  |_|  ||       ||       ||  | |  |\0",
@@ -85,17 +92,78 @@ char title[19][80] = {
 	"==============================================================================\0",
 	"                      - G I L G A M E S H ' S   T A V E R N -                 \0",
 	"==============================================================================\0",
+	"                           > Press Enter To Move On <                         \0"
 };
+typedef struct {
+	char name [20] ;
+	short ATK;
+	short HP;
+	short SPD;
+}status;
 
 int main() {
 	if (!CL11Startup()) {
 		perror("CL11Startup error");
 		return 0;
 	}
-	drawUi();
+	SetCursorVisibility(FALSE);
+	drawTitle();
 	rewind(stdin);(void)getchar();
+	writeIntro();
+	enterMoveOn();
 	system("cls");
 	return 0;
+}
+void drawTitle() {
+	MoveCursorToTop();
+	for (int i = 0; i < 20; ++i) {
+		std::cout << title[i] << std::endl;
+		Sleep(50);
+	}
+}
+
+void resetUiFromTemp() {
+	for (int i = 0; i < V_MAX; ++i)
+		strcpy_s(ui[i], temp[i]);
+}
+
+void saveUiToTemp() {
+	for (int i = 0; i < V_MAX; ++i)
+		strcpy_s(temp[i], ui[i]);
+}
+
+void enterMoveOn() {
+	MoveCursorToTop();
+	char text[] = ">Press Enter To Move On<";
+	char* tempPtr = &ui[23][55];
+	for (int i = 0; i < strlen(text); ++i) {
+		tempPtr = &ui[23][55 + i];
+		*tempPtr = text[i];
+		drawUi();
+		Sleep(5);
+	}
+	rewind(stdin);(void)getchar();
+}
+void writeIntro() {
+	MoveCursorToTop();
+	char* tempPtr = &ui[0][0];
+	char introtext[][80] {
+		"Welcome to Gilgamesh's Tavern!",
+		"Adventurers from all over gather to share tales of their journeys here.",
+		"Enjoy a hearty meal and a refreshing drink as you unwind from your quests.",
+		"May your stay be filled with camaraderie and unforgettable stories!",
+	};
+	
+	for (int i = 0; i < V_MAX; ++i)
+		strcpy_s(temp[i], ui[i]);
+	for (int i = 0; i < 4; ++i) {
+		for (int j = 0; j < strlen(introtext[i]); ++j) {
+			tempPtr = &ui[19 + i][1 + j];
+			*tempPtr = introtext[i][j];
+			drawUi();
+			Sleep(5);
+		}
+	}
 }
 
 bool isValidPosition(int x, int y) {
