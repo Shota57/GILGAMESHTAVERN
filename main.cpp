@@ -39,7 +39,7 @@ void centerConsoleWindow(int screenWidth, int screenHeight);    // コンソー�
 void EnableVTMode();						// VTシーケンスモードを有効化
 void SetTextColorRGB(int r, int g, int b);	//コンソールウィンドウの表示色をRGB形式で変更
 void SetBackgroundColorRGB(int r, int g, int b);	//コンソールウィンドウの背景色をRGB形式で変更
-bool isValidPosition(int x, int y);
+bool isValidPosition(int x, int y);		// 指定座標が有効かどうか判定する関数
 
 char temp[V_MAX][H_MAX + 1]; // UI描画用の一時バッファ
 char ui[V_MAX][H_MAX + 1] =
@@ -154,8 +154,8 @@ void writeIntro() {
 		"May your stay be filled with camaraderie and unforgettable stories!",
 	};
 	
-	for (int i = 0; i < V_MAX; ++i)
-		strcpy_s(temp[i], ui[i]);
+	saveUiToTemp();
+
 	for (int i = 0; i < 4; ++i) {
 		for (int j = 0; j < strlen(introtext[i]); ++j) {
 			tempPtr = &ui[19 + i][1 + j];
