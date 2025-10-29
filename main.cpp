@@ -20,6 +20,7 @@ const int CONSOLE_HEIGHT = 26;
 
 const int direction_x[8] = { -1,-1,-1,0,0,1,1,1 };
 const int direction_y[8] = { -1,0,1,-1,1,-1,0,1 };
+void inputStringToUi();					 // UIに文字列を入力する関数
 void enterMoveOn();                     // Enterキーで先に進む関数
 void drawTitle();					 // タイトルを描画する関数
 void drawUi();						 // UIを描画する関数
@@ -106,6 +107,13 @@ typedef struct {
 	short HP;
 	short SPD;
 }status;
+status enemyParty[5] = {
+		{"Goblin", 10, 30, 5},
+		{"Orc", 15, 40, 4},
+		{"Troll", 20, 50, 2},
+		{"Elf", 12, 28, 7},
+		{"Knight", 18, 35, 3}
+};
 
 int main() {
 	if (!CL11Startup()) {
@@ -119,14 +127,73 @@ int main() {
 	enterMoveOn();
 	resetUiFromTemp();
 	drawUi();
-	for (;;) {
-		writeSentakushi();
+	inputStringToUi();
+	status parties[5][5];
+	for (int p = 0; p < 5; ++p) {
+		std::cout << "Please input party No." << (p + 1) <<"'s status\n";
+		for (int m = 0; m < 5; ++m) {
+			std::cout << "  Member" << (m + 1) << " Name : ";
+			std::cin >> parties[p][m].name;
+			std::cout << "    ATK: ";
+			std::cin >> parties[p][m].ATK;
+			std::cout << "    HP: ";
+			std::cin >> parties[p][m].HP;
+			std::cout << "    SPD: ";
+			std::cin >> parties[p][m].SPD;
+		}
+	}
+	for (int p = 0; p < 5; ++p) {
+		std::cout << "\nパーティ" << (p + 1) << "の1人目(" << parties[p][0].name << ")と敵(" << enemyParty[0].name << ")のバトル！\n";
+		int hp1 = parties[p][0].HP;
+		int hp2 = enemyParty[0].HP;
+		while (hp1 > 0 && hp2 > 0) {
+			hp2 -= parties[p][0].ATK;
+			if (hp2 <= 0) break;
+			hp1 -= enemyParty[0].ATK;
+		}
+		if (hp1 > 0)
+			std::cout << parties[p][0].name << "の勝ち！\n";
+		else
+			std::cout << enemyParty[0].name << "の勝ち！\n";
 	}
 	
 	
 
 	system("cls");
 	return 0;
+}
+
+void inputStringToUi() {
+	char input[H_MAX - 2 + 1] = { 0 }; // 1行分の入力バッファ
+	int pos = 0;
+	char* ptr = &ui[19][1];
+
+	// 初期表示
+	drawUi();
+	MoveCursorToTop();
+
+	while (true) {
+		int ch = _getch();
+		if (ch == 13) { // Enter
+			break;
+		}
+		else if (ch == 8) { // Backspace
+			if (pos > 0) {
+				--pos;
+				input[pos] = '\0';
+				ptr[pos] = ' ';
+				drawUi();
+				MoveCursorToTop();
+			}
+		}
+		else if (ch >= 32 && ch <= 126 && pos < H_MAX - 2) { // 表示可能文字
+			input[pos] = (char)ch;
+			ptr[pos] = (char)ch;
+			++pos;
+			drawUi();
+			MoveCursorToTop();
+		}
+	}
 }
 void drawTitle() {
 	MoveCursorToTop();
