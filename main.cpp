@@ -23,6 +23,7 @@ const int direction_y[8] = { -1,0,1,-1,1,-1,0,1 };
 void enterMoveOn();                     // Enterキーで先に進む関数
 void drawTitle();					 // タイトルを描画する関数
 void drawUi();						 // UIを描画する関数
+void writeSentakushi();                 // 選択肢UIを描画する関数
 void saveUiToTemp();                  // UIを一時バッファに保存する関数
 void resetUiFromTemp();              // 一時バッファからUIを復元する関数
 void writeIntro();                            // 白文字でイントロ表示
@@ -94,6 +95,11 @@ char title[20][80] = {
 	"==============================================================================\0",
 	"                           > Press Enter To Move On <                         \0"
 };
+char sentakushi[2][15] = {
+	" 1. Start Game",
+	" 2. To Title"
+};
+
 typedef struct {
 	char name [20] ;
 	short ATK;
@@ -111,6 +117,14 @@ int main() {
 	rewind(stdin);(void)getchar();
 	writeIntro();
 	enterMoveOn();
+	resetUiFromTemp();
+	drawUi();
+	for (;;) {
+		writeSentakushi();
+	}
+	
+	
+
 	system("cls");
 	return 0;
 }
@@ -125,6 +139,20 @@ void drawTitle() {
 void resetUiFromTemp() {
 	for (int i = 0; i < V_MAX; ++i)
 		strcpy_s(ui[i], temp[i]);
+}
+
+void writeSentakushi() {
+	saveUiToTemp();
+	MoveCursorToTop();
+	char* tempPtr = &ui[20][30];
+	for (int i = 0; i < 2; ++i) {
+		for (int j = 0; j < strlen(sentakushi[i]); ++j) {
+			tempPtr = &ui[20 + i][30 + j];
+			*tempPtr = sentakushi[i][j];
+			drawUi();
+			Sleep(5);
+		}
+	}
 }
 
 void saveUiToTemp() {
@@ -142,9 +170,10 @@ void enterMoveOn() {
 		drawUi();
 		Sleep(5);
 	}
-	rewind(stdin);(void)getchar();
+	_getch();
 }
 void writeIntro() {
+	saveUiToTemp();
 	MoveCursorToTop();
 	char* tempPtr = &ui[0][0];
 	char introtext[][80] {
@@ -154,7 +183,7 @@ void writeIntro() {
 		"May your stay be filled with camaraderie and unforgettable stories!",
 	};
 	
-	saveUiToTemp();
+void saveUiToTemp();
 
 	for (int i = 0; i < 4; ++i) {
 		for (int j = 0; j < strlen(introtext[i]); ++j) {
