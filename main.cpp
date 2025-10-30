@@ -17,10 +17,23 @@
 // Define constants 定数の定義
 const int CONSOLE_WIDTH = 80;
 const int CONSOLE_HEIGHT = 26;
-
+typedef struct {
+	char name[20];
+	short ATK;
+	short HP;
+	short SPD;
+}status;
+status enemyParty[5] = {
+		{"Goblin", 10, 30, 5},
+		{"Orc", 15, 40, 4},
+		{"Troll", 20, 50, 2},
+		{"Elf", 12, 28, 7},
+		{"Knight", 18, 35, 3}
+};
 const int direction_x[8] = { -1,-1,-1,0,0,1,1,1 };
 const int direction_y[8] = { -1,0,1,-1,1,-1,0,1 };
-void inputStringToUi();					 // UIに文字列を入力する関数
+void givePartyStatus(status* party, int partyNo);              // パーティのステータスを入力する関数
+void inputStringToUi(int a, int b);					 // UIに文字列を入力する関数
 void enterMoveOn();                     // Enterキーで先に進む関数
 void drawTitle();					 // タイトルを描画する関数
 void drawUi();						 // UIを描画する関数
@@ -101,19 +114,7 @@ char sentakushi[2][15] = {
 	" 2. To Title"
 };
 
-typedef struct {
-	char name [20] ;
-	short ATK;
-	short HP;
-	short SPD;
-}status;
-status enemyParty[5] = {
-		{"Goblin", 10, 30, 5},
-		{"Orc", 15, 40, 4},
-		{"Troll", 20, 50, 2},
-		{"Elf", 12, 28, 7},
-		{"Knight", 18, 35, 3}
-};
+
 
 int main() {
 	if (!CL11Startup()) {
@@ -127,23 +128,13 @@ int main() {
 	enterMoveOn();
 	resetUiFromTemp();
 	drawUi();
-	inputStringToUi();
 	status parties[5][5];
 	for (int p = 0; p < 5; ++p) {
-		std::cout << "Please input party No." << (p + 1) <<"'s status\n";
-		for (int m = 0; m < 5; ++m) {
-			std::cout << "  Member" << (m + 1) << " Name : ";
-			std::cin >> parties[p][m].name;
-			std::cout << "    ATK: ";
-			std::cin >> parties[p][m].ATK;
-			std::cout << "    HP: ";
-			std::cin >> parties[p][m].HP;
-			std::cout << "    SPD: ";
-			std::cin >> parties[p][m].SPD;
-		}
+		givePartyStatus(parties[p], p);
 	}
+
 	for (int p = 0; p < 5; ++p) {
-		std::cout << "\nパーティ" << (p + 1) << "の1人目(" << parties[p][0].name << ")と敵(" << enemyParty[0].name << ")のバトル！\n";
+		std::cout << "\nParty No." << (p + 1) << "PlayerNo.1(" << parties[p][0].name << ")vs(" << enemyParty[0].name << "\n";
 		int hp1 = parties[p][0].HP;
 		int hp2 = enemyParty[0].HP;
 		while (hp1 > 0 && hp2 > 0) {
@@ -152,9 +143,9 @@ int main() {
 			hp1 -= enemyParty[0].ATK;
 		}
 		if (hp1 > 0)
-			std::cout << parties[p][0].name << "の勝ち！\n";
+			std::cout << parties[p][0].name << "Wins!!\n";
 		else
-			std::cout << enemyParty[0].name << "の勝ち！\n";
+			std::cout << enemyParty[0].name << "Wins!!\n";
 	}
 	
 	
@@ -162,22 +153,75 @@ int main() {
 	system("cls");
 	return 0;
 }
+void givePartyStatus(status* party, int partyNo) {
+	// メッセージを作成
+	
+	char message[][80]{
+		"Please input party No.\0",
+		"'s status\0",
+		"Member Name : \0",
+		"ATK:\0",
+		"HP:\0",
+		"SPD:\0"
+	};
 
-void inputStringToUi() {
-	char input[H_MAX - 2 + 1] = { 0 }; // 1行分の入力バッファ
+	MoveCursorToTop();
+	char* tempPtr = &ui[19][1];
+	for (int i = 0; i < strlen(message[0]); ++i) {
+		tempPtr = &ui[19][1 + i];
+		*tempPtr = message[0][i];
+		drawUi();
+		Sleep(5);
+	}
+	tempPtr = &ui[19][strlen(message[0]) + 1];
+	*tempPtr = '0' + (partyNo + 1);
+	drawUi();
+
+	for (int i = 0; i < strlen(message[1]); ++i) {
+		tempPtr = &ui[19][strlen(message[0]) + 2 + i];
+		*tempPtr = message[1][i];
+		drawUi();
+		Sleep(5);
+	}
+	enterMoveOn();
+	resetUiFromTemp();
+	for (int i = 2; i < 6; ++i) {
+		for (int j = 0; j < strlen(message[i]); ++j) {
+			tempPtr = &ui[18 + i][1 + j];
+			*tempPtr = message[i][j];
+			drawUi();
+			Sleep(5);
+		}
+		inputStringToUi(i, strlen(message[i]));
+	}
+	
+	// 各メンバーの入力
+	/*for (int m = 0; m < 5; ++m) {
+		std::cout << "\n  Member" << (m + 1) << " Name : ";
+		std::cin >> party[m].name;
+		std::cout << "    ATK: ";
+		std::cin >> party[m].ATK;
+		std::cout << "    HP: ";
+		std::cin >> party[m].HP;
+		std::cout << "    SPD: ";
+		std::cin >> party[m].SPD;
+	}*/
+}
+
+void inputStringToUi(int a, int b) {
+	char input[H_MAX - 2 + 1] = { 0 }; 
 	int pos = 0;
-	char* ptr = &ui[19][1];
-
-	// 初期表示
+	char* ptr = &ui[19+a][1+b];
 	drawUi();
 	MoveCursorToTop();
 
+
 	while (true) {
 		int ch = _getch();
-		if (ch == 13) { // Enter
+		if (ch == 13) { 
 			break;
 		}
-		else if (ch == 8) { // Backspace
+		else if (ch == 8) { 
 			if (pos > 0) {
 				--pos;
 				input[pos] = '\0';
@@ -186,7 +230,7 @@ void inputStringToUi() {
 				MoveCursorToTop();
 			}
 		}
-		else if (ch >= 32 && ch <= 126 && pos < H_MAX - 2) { // 表示可能文字
+		else if (ch >= 32 && ch <= 126 && pos < H_MAX - 2) { 
 			input[pos] = (char)ch;
 			ptr[pos] = (char)ch;
 			++pos;
@@ -237,7 +281,8 @@ void enterMoveOn() {
 		drawUi();
 		Sleep(5);
 	}
-	_getch();
+	rewind(stdin);
+	(void)getchar();
 }
 void writeIntro() {
 	saveUiToTemp();
@@ -249,8 +294,6 @@ void writeIntro() {
 		"Enjoy a hearty meal and a refreshing drink as you unwind from your quests.",
 		"May your stay be filled with camaraderie and unforgettable stories!",
 	};
-	
-void saveUiToTemp();
 
 	for (int i = 0; i < 4; ++i) {
 		for (int j = 0; j < strlen(introtext[i]); ++j) {
@@ -421,7 +464,8 @@ void ShowConsoleTitleBar() {
 // キーボード入力バッファのクリア関数
 void clearInputBuffer() {
 	while (_kbhit()) {
-		_getch();
+		rewind(stdin);
+		(void)getchar();
 	}
 }
 
