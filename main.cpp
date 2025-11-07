@@ -19,9 +19,9 @@ const int CONSOLE_WIDTH = 80;
 const int CONSOLE_HEIGHT = 26;
 typedef struct {
 	char name[20];
-	short ATK;
-	short HP;
-	short SPD;
+	int ATK;
+	int HP;
+	int SPD;
 }status;
 status enemyParty[5] = {
 		{"Goblin", 10, 30, 5},
@@ -33,7 +33,7 @@ status enemyParty[5] = {
 const int direction_x[8] = { -1,-1,-1,0,0,1,1,1 };
 const int direction_y[8] = { -1,0,1,-1,1,-1,0,1 };
 void givePartyStatus(status* party, int partyNo);              // パーティのステータスを入力する関数
-void inputStringToUi(int a, int b);					 // UIに文字列を入力する関数
+void inputStringToUi(int a, int b, int c);					 // UIに文字列を入力する関数
 void enterMoveOn();                     // Enterキーで先に進む関数
 void drawTitle();					 // タイトルを描画する関数
 void drawUi();						 // UIを描画する関数
@@ -113,7 +113,7 @@ char sentakushi[2][15] = {
 	" 1. Start Game",
 	" 2. To Title"
 };
-
+status parties[5][5];
 
 
 int main() {
@@ -128,9 +128,10 @@ int main() {
 	enterMoveOn();
 	resetUiFromTemp();
 	drawUi();
-	status parties[5][5];
+	
 	for (int p = 0; p < 5; ++p) {
 		givePartyStatus(parties[p], p);
+		resetUiFromTemp();
 	}
 
 	for (int p = 0; p < 5; ++p) {
@@ -142,10 +143,13 @@ int main() {
 			if (hp2 <= 0) break;
 			hp1 -= enemyParty[0].ATK;
 		}
-		if (hp1 > 0)
+		if (hp1 > 0) {
 			std::cout << parties[p][0].name << "Wins!!\n";
-		else
+			enterMoveOn();
+		}
+		else {
 			std::cout << enemyParty[0].name << "Wins!!\n";
+		}
 	}
 	
 	
@@ -192,8 +196,10 @@ void givePartyStatus(status* party, int partyNo) {
 			drawUi();
 			Sleep(5);
 		}
-		inputStringToUi(i, strlen(message[i]));
+		inputStringToUi(i, strlen(message[i]), partyNo);
 	}
+	enterMoveOn();
+
 	
 	// 各メンバーの入力
 	/*for (int m = 0; m < 5; ++m) {
@@ -208,21 +214,26 @@ void givePartyStatus(status* party, int partyNo) {
 	}*/
 }
 
-void inputStringToUi(int a, int b) {
+void inputStringToUi(int a, int b, int c) {
 	char input[H_MAX - 2 + 1] = { 0 }; 
 	int pos = 0;
-	char* ptr = &ui[19+a][1+b];
+	char* ptr = &ui[18+a][1+b];
 	drawUi();
 	MoveCursorToTop();
 
 
 	while (true) {
-		int ch = _getch();
-		if (ch == 13) { 
+		char ch = _getch();
+		int i = 0;
+		if (ch == '\r') {
+			++i;
 			break;
 		}
-		else if (ch == 8) { 
+		else if (ch == 0x08) { 
 			if (pos > 0) {
+				if (i > 0) {
+					--i;
+				}
 				--pos;
 				input[pos] = '\0';
 				ptr[pos] = ' ';
@@ -230,13 +241,84 @@ void inputStringToUi(int a, int b) {
 				MoveCursorToTop();
 			}
 		}
-		else if (ch >= 32 && ch <= 126 && pos < H_MAX - 2) { 
-			input[pos] = (char)ch;
-			ptr[pos] = (char)ch;
+		else if (ch >= 32 && ch <= 126 && pos < H_MAX - 2 && i == 0) {
+			input[pos] = ch;
+			ptr[pos] = ch;
 			++pos;
+			parties[c][a - 2].name[pos - 1] = ch;
 			drawUi();
 			MoveCursorToTop();
 		}
+		else if (ch >= 0x31 && ch <= 0x39 && pos < H_MAX - 2 && i == 1) {
+			input[pos] = ch;
+			ptr[pos] = ch;
+			++pos;
+			parties[c][a - 2].ATK= (int)ch;
+			++i;
+			drawUi();
+			MoveCursorToTop();
+		}
+		else if (ch >= 0x31 && ch <= 0x39 && pos < H_MAX - 2 && i == 2) {
+			input[pos] = ch;
+			ptr[pos] = ch;
+			++pos;
+			parties[c][a - 2].ATK = (parties[c][a - 2].ATK) * 10;
+			parties[c][a - 2].ATK = parties[c][a - 2].ATK + (int)ch;
+			++i;
+			drawUi();
+			MoveCursorToTop();
+		}
+		else if (ch >= 0x31 && ch <= 0x39 && pos < H_MAX - 2 && i == 3) {
+			drawUi();
+			MoveCursorToTop();
+		}
+		else if (ch >= 0x31 && ch <= 0x39 && pos < H_MAX - 2 && i == 4) {
+			input[pos] = ch;
+			ptr[pos] = ch;
+			++pos;
+			parties[c][a - 2].HP = (int)ch;
+			++i;
+			drawUi();
+			MoveCursorToTop();
+		}
+		else if (ch >= 0x31 && ch <= 0x39 && pos < H_MAX - 2 && i == 5) {
+			input[pos] = ch;
+			ptr[pos] = ch;
+			++pos;
+			parties[c][a - 2].HP = (parties[c][a - 2].HP) * 10;
+			parties[c][a - 2].HP = parties[c][a - 2].HP + (int)ch;
+			++i;
+			drawUi();
+			MoveCursorToTop();
+		}
+		else if (ch >= 0x31 && ch <= 0x39 && pos < H_MAX - 2 && i == 6) {
+			drawUi();
+			MoveCursorToTop();
+		}
+		else if (ch >= 0x31 && ch <= 0x39 && pos < H_MAX - 2 && i == 7) {
+			input[pos] = ch;
+			ptr[pos] = ch;
+			++pos;
+			parties[c][a - 2].SPD = (int)ch;
+			++i;
+			drawUi();
+			MoveCursorToTop();
+		}
+		else if (ch >= 0x31 && ch <= 0x39 && pos < H_MAX - 2 && i == 8) {
+			input[pos] = ch;
+			ptr[pos] = ch;
+			++pos;
+			parties[c][a - 2].SPD = (parties[c][a - 2].SPD) * 10;
+			parties[c][a - 2].SPD = parties[c][a - 2].SPD + (int)ch;
+			++i;
+			drawUi();
+			MoveCursorToTop();
+		}
+		else if (ch >= 0x31 && ch <= 0x39 && pos < H_MAX - 2 && i == 9) {
+			drawUi();
+			MoveCursorToTop();
+		}
+		
 	}
 }
 void drawTitle() {
